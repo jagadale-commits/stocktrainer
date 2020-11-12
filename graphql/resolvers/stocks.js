@@ -1,5 +1,4 @@
 const { AuthenticationError, UserInputError } = require('apollo-server');
-const axios = require('axios');
 const Stock = require('../../models/Stock');
 const checkAuth = require('../../util/check-auth');
 module.exports = {
@@ -28,32 +27,41 @@ module.exports = {
   Mutation: {
     async createStock(_, { ticker }, context) {
       const user = checkAuth(context);
-      let price = [];
+      var price = [];
       var prediction =  Array.from({length: 100}, () => Math.floor(Math.random()*3 -1));
       var decisions = new Array(100).fill(0);
       var correct = new Array(100).fill(0);
       var timestamp1 = new Array(100);
       var timestamp2 = new Array(100);
 
-      const newStock = new Stock({
-        closingPrice: price.toString(),
-        prediction: prediction.toString(),
-        decisions: decisions.toString(),
-        correct: correct.toString(),
-        timestamp1: timestamp1.toString(),
-        timestamp2: timestamp2.toString(),
-        user: user.id,
-        username: user.username,
-        createdAt: new Date().toISOString()
-      });
+      var yourApiKey = process.env.APIKEY;
+      const alpha = require('alphavantage')({ key: yourApiKey });
 
-      const stock = await newStock.save();
+      alpha.data.daily(ticker, 'compact', 'json', 'daily')
+          .then(data => {
+            var l = require('lodash');
+            l.forEach(data['Time Series (Daily)'], function(value, key) {
+              price.push(value['4. close']);
+            })
+          }).catch(err => {
+              console.error(err);
+          });
 
-      context.pubsub.publish('NEW_STOCK', {
-        newStock: stock
-      });
-
-      return stock;
+            const newStock = new Stock({
+              closingPrice: price,
+              prediction: prediction,
+              decisions: decisions,
+              correct: correct,
+              timestamp1: timestamp1,
+              timestamp2: timestamp2,
+              user: user.id,
+              username: user.username,
+              createdAt: new Date().toISOString()
+            });
+            const stock = await newStock.save();
+            return stock;  
+            
+        
     },
     async updateStock(_, { closingPrice, decisions, correct, timestamp1, timestamp2, stockId }, context) {
       const user = checkAuth(context);
