@@ -31,54 +31,40 @@ module.exports = {
       var prediction =  Array.from({length: 100}, () => Math.floor(Math.random()*3 -1));
       var decisions = new Array(100).fill(0);
       var correct = new Array(100).fill(0);
-      var timestamp1 = new Array(100);
-      var timestamp2 = new Array(100);
 
       var yourApiKey = process.env.APIKEY;
       const alpha = require('alphavantage')({ key: yourApiKey });
-
-      alpha.data.daily(ticker, 'compact', 'json', 'daily')
+      try{
+       await alpha.data.daily(ticker, 'compact', 'json', 'daily')
           .then(data => {
             var l = require('lodash');
             l.forEach(data['Time Series (Daily)'], function(value, key) {
-              price.push(value['4. close']);
+              price.push(Number(value['4. close']));
             })
           }).catch(err => {
               console.error(err);
           });
-
+        }catch (err) {
+          throw new Error(err);
+        }
             const newStock = new Stock({
               closingPrice: price,
               prediction: prediction,
               decisions: decisions,
               correct: correct,
-              timestamp1: timestamp1,
-              timestamp2: timestamp2,
               user: user.id,
               username: user.username,
               createdAt: new Date().toISOString()
             });
             const stock = await newStock.save();
-            return stock;  
-            
-        
+            return stock;    
     },
-    async updateStock(_, { closingPrice, decisions, correct, timestamp1, timestamp2, stockId }, context) {
-      const user = checkAuth(context);
-      
+    async updateStock(_, {decisions, stockId }) {
       try {
         const stock = await Stock.findById(stockId);
-        if (user.username === stock.username) {
-          stock.closingPrice = closingPrice;
           stock.decisions = decisions ;
-          stock.correct = correct;
-          stock.timpestamp1 = timestamp1;
-          stock.timestamp2 = timestamp2;
           await stock.save();
-      return stock;
-        } else {
-          throw new AuthenticationError('Action not allowed');
-        }
+          return stock;
       } catch (err) {
         throw new Error(err);
       }

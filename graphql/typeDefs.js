@@ -5,12 +5,9 @@ module.exports = gql`
     id: ID!
     username: String!
     createdAt: String!
-    closingPrice: [String]!
-    prediction: [String]!
-    decisions: [String]!
-    correct: [String]!
-    timestamp1: [String]!
-    timestamp2: [String]!
+    closingPrice: [Float]!
+    prediction: [Int]!
+    decisions: [Int]!
   }
   
   type User {
@@ -35,7 +32,7 @@ module.exports = gql`
     register(registerInput: RegisterInput): User!
     login(username: String!, password: String!): User!
     createStock(ticker: String!): Stock!
-    updateStock(stockId: ID!, decisions: [String]!, correct: [String]!, timestamp1: [String]!, timestamp2: [String]!): Stock!
+    updateStock(stockId: ID!, decisions: [Int]!): Stock!
     deleteStock(stockId: ID!): String!
   }
 

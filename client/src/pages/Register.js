@@ -12,7 +12,6 @@ function Register(props) {
 
   const { onChange, onSubmit, values } = useForm(registerUser, {
     username: '',
-    email: '',
     password: '',
     confirmPassword: ''
   });
@@ -48,15 +47,6 @@ function Register(props) {
           type="text"
           value={values.username}
           error={errors.username ? true : false}
-          onChange={onChange}
-        />
-        <Form.Input
-          label="Email"
-          placeholder="Email.."
-          name="email"
-          type="email"
-          value={values.email}
-          error={errors.email ? true : false}
           onChange={onChange}
         />
         <Form.Input
@@ -97,20 +87,17 @@ function Register(props) {
 const REGISTER_USER = gql`
   mutation register(
     $username: String!
-    $email: String!
     $password: String!
     $confirmPassword: String!
   ) {
     register(
       registerInput: {
         username: $username
-        email: $email
         password: $password
         confirmPassword: $confirmPassword
       }
     ) {
       id
-      email
       username
       createdAt
       token
